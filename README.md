@@ -6,3 +6,4 @@ To use it, you only need to include the header file. The compiler needs to be se
 Currently, it has only been tested on the gcc compiler. Please use the latest version of the compiler  
 使用方法：thread_pool pool(int thread_count)，创建线程池并传入需要创建的线程数  
 然后     pool.submit()  传入你要执行的函数即可  
+使用     pool.wait() 可以阻塞等待任务执行完毕
