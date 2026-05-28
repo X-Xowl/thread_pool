@@ -55,14 +55,19 @@ public:
     thread_pool& operator=(const thread_pool&) = delete;
     thread_pool& operator=(thread_pool&&) = delete;
     /////////////////////////////////////////////
-    template <std::invocable F,typename R = std::invoke_result_t<std::decay_t<F>>>
-    [[nodiscard]] auto submit(F&& f)
+    template <std::invocable F,typename... Args>
+    [[nodiscard]] auto submit(F&& f,Args&&... args)
     {
-        auto task = std::packaged_task<R()>(std::forward<F>(f));
+        using R = std::invoke_result_t<F,Args...>;
+        auto lambda = [f=std::forward<F>(f),...args=std::forward<Args>(args)] mutable
+        {
+            return std::invoke(f,args...);
+        };
+        auto task = std::packaged_task<R()>(std::move(lambda));
         auto fut = task.get_future();
         {
             std::scoped_lock lock(tasks_mutex);
-            tasks.push([task = std::move(task)]() mutable
+            tasks.emplace([task = std::move(task)]() mutable
             {
                 task();
             });
